@@ -1,0 +1,32 @@
+source("http://www.utstat.toronto.edu/burkett/sta442f15/kmplot.R")
+options(digits=4)
+require(survival)
+df=read.table("http://www.utstat.toronto.edu/burkett/sta442f15/whas500.dat",header=F)
+colnames(df)=c("id","age","gender","hr","sysbp","diasbp","bmi","cvd","afb","sho","chf","av3","miord","mitype","year","admitdate","disdate","fdate","los","dstat","lenfol","fstat")
+KMfit = survfit(Surv(lenfol,fstat)~gender , data=df)
+kmplot(KMfit,lty.surv= c(1,5))
+fit.cox = coxph(Surv(lenfol,fstat)~age+gender+hr+sysbp+diasbp+bmi+cvd+afb+sho+chf+av3+miord+mitype+year,data=df);fit.cox
+fit.cox0 = coxph(Surv(lenfol,fstat)~age+gender+hr+sysbp+diasbp+bmi+sho+chf+mitype+year,data=df);fit.cox0
+anova(fit.cox0,fit.cox,test="LRT")
+
+fit.cox1 = coxph(Surv(lenfol,fstat)~age+gender+hr+diasbp+bmi+sho+chf+year,data=df);fit.cox1
+anova(fit.cox1,fit.cox,test="LRT")
+#e
+fit.cox2 = coxph(Surv(lenfol,fstat)~(age+gender+hr+sysbp+diasbp+bmi+cvd+afb+sho+chf+av3+miord+mitype+year)^2,data=df);fit.cox2
+
+anova(fit.cox2,fit.cox,test="LRT")
+fit.cox4 = coxph(Surv(lenfol,fstat)~age*gender+hr+sysbp+diasbp+bmi+cvd+afb+sho+chf+av3+miord+mitype+year,data=df);fit.cox4
+anova(fit.cox4,fit.cox2,test="LRT")
+
+
+#2
+# gender(F=1,M=0); cvd(cardio disease his 1=Y);sho(shock 1=Y);chf(heart compl 1=Y);miord(mi order 1=Recurrent);
+#mitype(mi type 1=Q-wave); year(1=1997,2=1999,3=2001);fstat(0=alive,1=dead)
+
+summary(fit.cox4)
+#how many times are you more likley to die in you have congested heart complications. 2.039 CI 1.513, 2.748
+# how many times are you less likely to die if u had shock 0.2988 1/CI
+exp((5*-0.012282)+(qnorm(0.975)*0.004903));exp((5*-0.012282)-(qnorm(0.975)*0.004903))
+# for every 5mm increase in diastolic e^(5*-0.012282),    CI e^(5*-0.012282)+/-(1.96*0.004903) exp(CI)
+# more likely for males to die for every year of age 1.0352
+
